@@ -1,0 +1,146 @@
+#include <iostream>
+#include <string>
+#include <iomanip>
+#include <cstdlib> // For system("CLS") to clear the screen
+void displayHomePage();
+void startBarcodeReader();
+void viewInstructions();
+void exitApp();
+void clearScreen();
+int main()
+{ int
+choice;
+do {
+clearScreen();
+displayHomePage();
+// Clears the screen for a fresh layout
+// Displays the home page layout
+std::cout << "Enter your choice: ";
+std::cin >> choice;
+switch (choice)
+{ case 1:
+startBarcodeReader();
+break;
+case 2:
+viewInstructions();
+break;
+case 3:
+exitApp();
+break;
+default:
+std::cout << "Invalid choice. Please try again.\n";
+break;
+std::cout << "\n=====================================\n";
+std::cout << " Welcome to the C++ Barcode Reader \n";
+std::cout << "=====================================\n";
+std::cout << "\n
+std::cout << "
+std::cout << " 1 Start Barcode Reader\n";
+2 Instructions\n";
+3 Exit\n";
+std::cout << " \n";
+std::cout << "Select an option by entering the number\n";
+std::cout << "=====================================\n";
+}
+void startBarcodeReader()
+{ clearScreen();
+std::cout << "\nStarting the barcode reader...\n";
+// Here, initialize and run the barcode reader function, e.g., using OpenCV and ZBar
+std::cout << "Barcode reader initialized. Ready to scan...\n";
+std::cout << "Press Enter to return to the Home Page...";
+std::cin.ignore();
+std::cin.get(); // Wait for user to press Ente
+}
+} while (choice != 3);
+return 0;
+}
+void displayHomePage() {
+}
+void viewInstructions()
+{ clearScreen();
+std::cout << "\n=====================================\n";
+std::cout << " Instructions for Barcode Reader \n";
+std::cout << "=====================================\n";
+std::cout << "1. Ensure your camera is connected.\n";
+std::cout << "2. Place the barcode clearly in front of the camera.\n";
+std::cout << "3. The application will automatically read and display the barcode data.\n";
+std::cout << "4. Supported barcodes include QR, UPC, EAN, and more.\n";
+std::cout << "=====================================\n";
+std::cout << "Press Enter to return to the Home Page...";
+std::cin.ignore();
+std::cin.get(); // Wait for user to press Enter
+}
+void exitApp()
+{
+clearScreen();
+std::cout << "\nThank you for using the C++ Barcode Reader!\n";
+std::cout << "Goodbye!\n\n";
+}
+void clearScreen()
+{ #ifdef _WIN32
+system("CLS");
+#else
+system("clear");
+#endif
+}
+#include <iostream>
+#include <opencv2/opencv.hpp>
+#include <zbar.h>
+using namespace cv;
+using namespace zbar;
+void startBarcodeReader() {
+// Initialize webcam
+VideoCapture cap(0);
+if (!cap.isOpened()) {
+std::cerr << "Error: Could not open webcam." << std::endl;
+return;
+}
+// Initialize ZBar scanner
+ImageScanner scanner;
+scanner.set_config(ZBAR_NONE, ZBAR_CFG_ENABLE, 1);
+while (true)
+{ Mat
+frame;
+cap >> f
+if (frame.empty()) {
+std::cerr << "Error: Could not grab frame." << std::endl;
+break;
+}
+// Convert the frame to grayscale (required for ZBar)
+Mat gray;
+cvtColor(frame, gray, COLOR_BGR2GRAY);
+// Wrap the OpenCV image into a ZBar image
+int width = gray.cols;
+int height = gray.rows;
+uchar *raw = (uchar *)gray.data;
+Image image(width, height, "Y800", raw, width * height);
+// Scan the image for barcodes
+int n = scanner.scan(image);
+// Process the results
+for (Image::SymbolIterator symbol = image.symbol_begin();
+image.symbol_end(); ++symbol) {
+std::cout << "Decoded barcode: " << symbol->get_data() << std::endl;
+symbol !=// Draw bounding box around barcode
+std::vector<Point> points;
+for (int i = 0; i < symbol->get_location_size(); i++)
+{ points.push_back(Point(symbol->get_location_x(i), symbol- >get_location_y(i)));
+}
+polylines(frame, points, true, Scalar(0, 255, 0), 2);
+// Display the barcode type and data
+std::string barcodeData = symbol->get_data();
+putText(frame, barcodeData, points[0], FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0), 2);
+}
+// Show the processed frame
+imshow("Barcode Reader", frame);
+// Exit if 'q' is pressed
+if (waitKey(10) == 'q') break;
+}
+cap.release(); // Release the webcam
+destroyAllWindows(); // Close all OpenCV windows
+}
+int main() {
+std::cout << "Starting Barcode Reader..." << std::endl;
+startBarcodeReader();
+std::cout << "Exiting Barcode Reader." << std::endl;
+return 0;
+}
